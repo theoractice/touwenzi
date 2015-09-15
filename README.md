@@ -6,3 +6,10 @@
 汉字笔画的数据来源为刹那工坊维护的字形资料库兼字形档 single.fnt（[GFDL授权](http://magicdesign.blogspot.com/2008/05/blog-post_19.html)）。
 
 相关的汉字动态组字软件：[libdgg](https://github.com/MGdesigner/libdgg/) 
+
+## 编译
+
+使用 VS2013 编译通过，C# / C++ 工程分别需要 SQLite / OpenCV 2.4.x。注意配置好相关路径（建议修改工程内附的 props 文件）。
+
+## License
+GPL 3.0
