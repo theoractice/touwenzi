@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <!--debug suffix-->
+    <DebugSuffix Condition="'$(Configuration)' == 'Debug'">d</DebugSuffix>
+    <DebugSuffix Condition="'$(Configuration)' != 'Debug'">
+    </DebugSuffix>
+    <!--toolset-->
+    <Toolset Condition="'$(PlatformToolsetVersion)' == '90'">9</Toolset>
+    <Toolset Condition="'$(PlatformToolsetVersion)' == '100'">10</Toolset>
+    <Toolset Condition="'$(PlatformToolsetVersion)' == '110'">11</Toolset>
+    <Toolset Condition="'$(PlatformToolsetVersion)' == '120'">12</Toolset>
+    <CV_VERSION>2411</CV_VERSION>
+    <cv_include>$(sdk)opencv\win\$(CV_VERSION)\opencv\build\include\</cv_include>
+    <cv_lib>$(sdk)opencv\win\$(CV_VERSION)\opencv\build\$(PlatformShortName)\vc$(Toolset)\staticlib\</cv_lib>
+  </PropertyGroup>
+  <PropertyGroup>
+    <_PropertySheetDisplayName>EnvOpenCV2</_PropertySheetDisplayName>
+    <IncludePath>$(cv_include);$(IncludePath)</IncludePath>
+    <LibraryPath>$(cv_lib);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>
+	      $(cv_lib)opencv_calib3d$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_contrib$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_core$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_features2d$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_flann$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_gpu$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_highgui$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_imgproc$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_legacy$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_ml$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_nonfree$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_objdetect$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_ocl$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_photo$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_stitching$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_superres$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_ts$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_video$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_videostab$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)IlmImf$(DebugSuffix).lib;
+        $(cv_lib)libjasper$(DebugSuffix).lib;
+        $(cv_lib)libjpeg$(DebugSuffix).lib;
+        $(cv_lib)libpng$(DebugSuffix).lib;
+        $(cv_lib)libtiff$(DebugSuffix).lib;
+        $(cv_lib)zlib$(DebugSuffix).lib;
+        vfw32.lib;
+        %(AdditionalDependencies)
+      </AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="CV_VERSION">
+      <Value>$(CV_VERSION)</Value>
+    </BuildMacro>
+    <BuildMacro Include="cv_include">
+      <Value>$(cv_include)</Value>
+    </BuildMacro>
+    <BuildMacro Include="cv_lib">
+      <Value>$(cv_lib)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
