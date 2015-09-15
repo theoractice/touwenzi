@@ -1,5 +1,5 @@
 # 头文字
-[小众软件收录](http://www.appinn.com/twz/)作品《头文字》的繁体版本 [原发布帖地址](https://meta.appinn.com/t/tou-wen-zi-yong-she-xiang-tou-xie-zi-huan-jie-jing-bu-pi-lao-15-slash-02-slash-14geng-xin/473)
+这是[小众软件收录](http://www.appinn.com/twz/)作品《头文字》的繁体版本。[原发布帖地址](https://meta.appinn.com/t/tou-wen-zi-yong-she-xiang-tou-xie-zi-huan-jie-jing-bu-pi-lao-15-slash-02-slash-14geng-xin/473)
 
 成语释义的数据来源为[萌典数据库](https://github.com/g0v/moedict-data)（[CC BY-ND 3.0 臺灣授權](https://www.moedict.tw/about.html)）。
 
