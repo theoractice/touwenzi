@@ -26,7 +26,6 @@ namespace TWZD.Main
 
             Directory.SetCurrentDirectory(Application.StartupPath);
 
-            Variable.MainFormNotify = new FormNotifier(DoNotify);
             sqlMgr = new SQLiteMgr(Environment.CurrentDirectory, "twz", typeof(TWZDData));
             strokeMgr = new StrokeMgr("", pictureBox1);
             watch = new Stopwatch();
@@ -54,7 +53,6 @@ namespace TWZD.Main
             int WS_EX_TRANSPARENT = 0x00000020;
             CVDllImport.SetWindowLong(Handle, -20,
                 STYLE | 0x80000 | (WS_EX_TRANSPARENT) | WS_EX_TOOLWINDOW);
-            Control.CheckForIllegalCrossThreadCalls = false;
         }
 
         private void ReadConfig()
@@ -189,26 +187,6 @@ namespace TWZD.Main
             camUsable = CVDllImport.CVTestCam(Variable.WebCamID);
         }
 
-        private void DoNotify(object sender, object param)
-        {
-            if (null == sender)
-            {
-                return;
-            }
-
-            switch (sender.ToString())
-            {
-                case "setopacity":
-                    this.Opacity = (double)param;
-                    break;
-                case "draw":
-                    strokeMgr.Draw();
-                    break;
-                default:
-                    break;
-            }
-        }
-
         void OnAlert(object source, System.Timers.ElapsedEventArgs e)
         {
             if ((DateTime.Now.Hour < 8) || (DateTime.Now.Hour > 18))
@@ -247,110 +225,128 @@ namespace TWZD.Main
             switch (this.frmState)
             {
                 case WinState.AlertIn:
-                    panel1.Visible = false;
-                    panel1.BackColor = this.BackColor;
-                    //this.TransparencyKey = Color.White;
-                    frmOpacity = Variable.AlertOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 500.0));
-                    if (frmOpacity >= Variable.AlertOpacity)
+                    Invoke(new MethodInvoker(delegate()
                     {
-                        frmState = WinState.AlertOut;
-                        frmOpacity = Variable.AlertOpacity;
+                        panel1.Visible = false;
+                        panel1.BackColor = this.BackColor;
+                        //this.TransparencyKey = Color.White;
+                        frmOpacity = Variable.AlertOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 500.0));
+                        if (frmOpacity >= Variable.AlertOpacity)
+                        {
+                            frmState = WinState.AlertOut;
+                            frmOpacity = Variable.AlertOpacity;
 
-                        watch.Reset();
-                        watch.Start();
-                    }
+                            watch.Reset();
+                            watch.Start();
+                        }
+                    }));
                     break;
                 case WinState.AlertOut:
-                    frmOpacity = Variable.AlertOpacity - Variable.AlertOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 500.0));
-                    if (frmOpacity <= 0)
+                    Invoke(new MethodInvoker(delegate()
                     {
-                        frmState = WinState.PhraseIn;
-                        frmOpacity = 0;
-                        //this.TransparencyKey = this.BackColor;
-                        watch.Reset();
-                        watch.Start();
-                    }
+                        frmOpacity = Variable.AlertOpacity - Variable.AlertOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 500.0));
+                        if (frmOpacity <= 0)
+                        {
+                            frmState = WinState.PhraseIn;
+                            frmOpacity = 0;
+                            //this.TransparencyKey = this.BackColor;
+                            watch.Reset();
+                            watch.Start();
+                        }
+                    }));
                     break;
                 case WinState.PhraseIn:
-                    label词语.Text = label词语.Text.Replace(currentChar, "＿");
-                    panel1.Visible = true;
-                    if (this.BackColor.B == 255)
-                        panel1.BackColor = Color.FromArgb(this.BackColor.ToArgb() - 1);
-                    else
-                        panel1.BackColor = Color.FromArgb(this.BackColor.ToArgb() + 1);
-
-                    //panel1.Height = label释义.Height + 96;
-                    frmOpacity = Variable.PhraseOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 1000.0));
-                    if (frmOpacity >= Variable.PhraseOpacity)
+                    Invoke(new MethodInvoker(delegate()
                     {
-                        frmState = WinState.Working;
-                        frmOpacity = Variable.PhraseOpacity;
+                        label词语.Text = label词语.Text.Replace(currentChar, "＿");
+                        panel1.Visible = true;
+                        if (this.BackColor.B == 255)
+                            panel1.BackColor = Color.FromArgb(this.BackColor.ToArgb() - 1);
+                        else
+                            panel1.BackColor = Color.FromArgb(this.BackColor.ToArgb() + 1);
 
-                        watch.Reset();
-                        watch.Start();
-
-                        if (!camUsable)
+                        //panel1.Height = label释义.Height + 96;
+                        frmOpacity = Variable.PhraseOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 1000.0));
+                        if (frmOpacity >= Variable.PhraseOpacity)
                         {
-                            break;
+                            frmState = WinState.Working;
+                            frmOpacity = Variable.PhraseOpacity;
+
+                            watch.Reset();
+                            watch.Start();
+
+                            if (camUsable)
+                            {
+                                fadeTimer.Interval = 15;
+
+                                ThreadPool.QueueUserWorkItem(delegate
+                                {
+                                    CVDllImport.CVStart(Variable.WebCamID.ToString());
+                                });
+                            }
                         }
-
-                        fadeTimer.Interval = 15;
-
-                        ThreadPool.QueueUserWorkItem(delegate
-                        {
-                            CVDllImport.CVStart(Variable.WebCamID.ToString());
-                        });
-                    }
+                    }));
                     break;
                 case WinState.Working:
-                    if (strokeMgr.Done
-                        || (watch.ElapsedMilliseconds > Variable.ShowIntervalMin * 60 * 1000))
+                    Invoke(new MethodInvoker(delegate()
                     {
-                        CVDllImport.CVQuit();
-                        frmState = WinState.PhraseOut;
-                        fadeTimer.Interval = 50;
-
-                        watch.Reset();
-                        watch.Start();
-                    }
-                    else
-                    {
-                        strokeMgr.OnDraw();
-                    }
-                    break;
-                case WinState.PhraseOut:
-                    label词语.Text = label词语.Text.Replace("＿", currentChar);
-                    frmOpacity = Variable.PhraseOpacity - Variable.PhraseOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 1000.0));
-                    if (frmOpacity <= 0)
-                    {
-
-                        if (quitFlag)
+                        if (strokeMgr.Done
+                            || (watch.ElapsedMilliseconds > Variable.ShowIntervalMin * 60 * 1000))
                         {
-                            Application.Exit();
+                            CVDllImport.CVQuit();
+                            frmState = WinState.PhraseOut;
+                            fadeTimer.Interval = 50;
+
+                            watch.Reset();
+                            watch.Start();
                         }
                         else
                         {
-                            退出ToolStripMenuItem.Enabled = true;
-                            设置ToolStripMenuItem.Enabled = true;
-                            预览ToolStripMenuItem.Text = "寫個字";
-                            frmState = WinState.Halt;
-                            frmOpacity = 0;
-                            watch.Reset();
-                            watch.Stop();
+                            strokeMgr.OnDraw();
                         }
-                    }
+                    }));
+                    break;
+                case WinState.PhraseOut:
+                    Invoke(new MethodInvoker(delegate()
+                    {
+                        label词语.Text = label词语.Text.Replace("＿", currentChar);
+                        frmOpacity = Variable.PhraseOpacity - Variable.PhraseOpacity * (watch.ElapsedMilliseconds / (Variable.FadeIntervalSec * 1000.0));
+                        if (frmOpacity <= 0)
+                        {
+
+                            if (quitFlag)
+                            {
+                                Application.Exit();
+                            }
+                            else
+                            {
+                                退出ToolStripMenuItem.Enabled = true;
+                                设置ToolStripMenuItem.Enabled = true;
+                                预览ToolStripMenuItem.Text = "寫個字";
+                                frmState = WinState.Halt;
+                                frmOpacity = 0;
+                                watch.Reset();
+                                watch.Stop();
+                            }
+                        }
+                    }));
                     break;
                 case WinState.Halt:
-                    watch.Reset();
-                    watch.Stop();
-                    fadeTimer.Enabled = false;
+                    Invoke(new MethodInvoker(delegate()
+                    {
+                        watch.Reset();
+                        watch.Stop();
+                        fadeTimer.Enabled = false;
+                    }));
                     break;
                 default:
                     break;
             }
 
-            Variable.MainForm.Invoke(Variable.MainFormNotify,
-                new object[] { "setopacity", frmOpacity });
+            Invoke(new MethodInvoker(delegate()
+            {
+                Opacity = frmOpacity;
+            }));
         }
 
         static FrameCallBack frameCallBack;

@@ -33,8 +33,9 @@ namespace TWZD.Main
         Graphics graphics;
         Bitmap bm;
         List<BezierPoints[]> strokeBeziers = new List<BezierPoints[]>();
-        Pen frontPen = new Pen(Color.White, 20);
-        Pen backPen = new Pen(Color.Black, 30);
+        // 繁体字的笔画要细一点，原因你懂的
+        Pen frontPen = new Pen(Color.White, 16);
+        Pen backPen = new Pen(Color.Black, 24);
         PictureBox _pbox;
         Matrix defMat;
 
@@ -88,24 +89,19 @@ namespace TWZD.Main
                 return;
             }
 
-            if ((x.ToString() == "0.1234") && (y.ToString() == "0.5678"))
-            {
-                return;
-            }
-
             BezierPoints d1, d2;
             if (1 == curStrokeProgress)
             {
-                d1 = ReCalPoints(
+                d1 = LerpBezierCurve(
             strokeBeziers[curStroke][curStrokePart], 0.99f);
-                d2 = ReCalPoints(
+                d2 = LerpBezierCurve(
             strokeBeziers[curStroke][curStrokePart], 1.00f);
             }
             else
             {
-                d1 = ReCalPoints(
+                d1 = LerpBezierCurve(
             strokeBeziers[curStroke][curStrokePart], curStrokeProgress);
-                d2 = ReCalPoints(
+                d2 = LerpBezierCurve(
             strokeBeziers[curStroke][curStrokePart], curStrokeProgress + 0.01f);
             }
 
@@ -141,9 +137,7 @@ namespace TWZD.Main
         internal void OnDraw()
         {
             speed = speed * 0.8f;
-
-            Variable.MainForm.Invoke(Variable.MainFormNotify,
-                new object[] { "draw", 1 });
+            Variable.MainForm.Invoke(new MethodInvoker(Draw));
         }
 
         private double AngleBetween(PointF vector1, PointF vector2)
@@ -153,7 +147,9 @@ namespace TWZD.Main
                 / Math.Sqrt(Math.Pow(vector2.X, 2) + Math.Pow(vector2.Y, 2));
             return Math.Acos(x);
         }
-
+        /// <summary>
+        /// 逐步绘制贝塞尔曲线
+        /// </summary>
         internal void Draw()
         {
             BezierPoints origPts = strokeBeziers[curStroke][curStrokePart];
@@ -167,7 +163,7 @@ namespace TWZD.Main
             {
                 curStrokeProgress = 1;
             }
-            BezierPoints bPtsToDraw = ReCalPoints(origPts, curStrokeProgress);
+            BezierPoints bPtsToDraw = LerpBezierCurve(origPts, curStrokeProgress);
             graphics.DrawBezier(frontPen
                 , bPtsToDraw.pts[0]
                 , bPtsToDraw.pts[1]
@@ -233,8 +229,13 @@ namespace TWZD.Main
 
             _pbox.Image = bm;
         }
-
-        private BezierPoints ReCalPoints(BezierPoints bezier, float t1)
+        /// <summary>
+        /// 按照匀速运动模式计算贝塞尔插值点
+        /// </summary>
+        /// <param name="bezier">控制点</param>
+        /// <param name="t1">比例</param>
+        /// <returns></returns>
+        private BezierPoints LerpBezierCurve(BezierPoints bezier, float t1)
         {
             BezierPoints ret = new BezierPoints();
 
@@ -288,7 +289,7 @@ namespace TWZD.Main
             return ret;
         }
 
-        #region Drawing!!!
+        #region 计算所有笔画的控制点
         private BezierPoints[] PreBeziers(int num)
         {
             BezierPoints[] beziers = new BezierPoints[num];
