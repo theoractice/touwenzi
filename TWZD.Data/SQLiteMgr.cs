@@ -11,15 +11,10 @@ namespace TWZD.Data
 {
     public class SQLiteMgr
     {
-        string _dbFilePath, _dbFileName;
-        string _dbFileFullName;
-        string _dbName;
-
+        string _dbFilePath, _dbFileName, _dbFileFullName, _dbName;
 
         SQLiteConnection _conn;
-        SQLiteCommand _cmd;
         Type _dbDesc;
-        SQLiteDataAdapter _SQLiteAdptr;
 
         public SQLiteMgr(string filePath, string fileName, Type dbDescClass)
         {
@@ -30,8 +25,6 @@ namespace TWZD.Data
             _dbFileFullName = _dbFilePath + "\\" + _dbFileName + ".db";
 
             _conn = new SQLiteConnection();
-            _cmd = new SQLiteCommand("", _conn);
-            _SQLiteAdptr = new SQLiteDataAdapter();
 
             if (File.Exists(_dbFileFullName))
             {
@@ -101,7 +94,7 @@ namespace TWZD.Data
             object loader = Activator.CreateInstance(type);
             if (loader is DbTableDesc)
             {
-                ExecuteSQLiteCommand((loader as DbTableDesc).GetCreateCmd());
+                ExecuteSQL((loader as DbTableDesc).GetCreateCmd());
             }
             else
             {
@@ -109,32 +102,28 @@ namespace TWZD.Data
             }
         }
 
-        private void ExecuteSQLiteCommand(string cmdText)
-        {
-            _cmd.CommandText = cmdText;
-
-            try
-            {
-                _cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "无法进行数据库操作");
-            }
-        }
-
         public DataTable SelectFromTable(string table, string variable, string value)
         {
-            _cmd.CommandText = "select * from " + table.Trim() + " where "
-                + variable.Trim() + " = '" + value.Trim() + "'";
+            SQLiteCommand cmd = new SQLiteCommand(
+                string.Format("select * from {0} where {1} = @value",
+                table, 
+                variable),
+                _conn);
 
-            _SQLiteAdptr = new SQLiteDataAdapter();
-            _SQLiteAdptr.SelectCommand = _cmd;
+            SQLiteParameter param = new SQLiteParameter();
+            param.ParameterName = "@value";
+            param.DbType = DbType.String;
+            param.Value = value;
+
+            cmd.Parameters.Add(param);
+
+            SQLiteDataAdapter dbReader = new SQLiteDataAdapter();
+            dbReader.SelectCommand = cmd;
 
             DataTable ds = new DataTable();
             try
             {
-                _SQLiteAdptr.Fill(ds);
+                dbReader.Fill(ds);
                 return ds;
             }
             catch (Exception ex)
@@ -147,14 +136,30 @@ namespace TWZD.Data
         public void AddToDB<T>(T item)
             where T : DbTableDesc
         {
-            ExecuteSQLiteCommand((string)item.GetInsertCmd(0));
+            ExecuteSQL((string)item.GetInsertCmd(0));
         }
 
         public void ResetTable<T>(T type)
             where T : Type
         {
-            ExecuteSQLiteCommand("DROP TABLE " + type.Name);
+            ExecuteSQL("DROP TABLE " + type.Name);
             CreateTable(type);
+        }
+
+        private int ExecuteSQL(string cmdText)
+        {
+            SQLiteCommand cmd = new SQLiteCommand(cmdText, _conn);
+            cmd.CommandText = cmdText;
+
+            try
+            {
+                return cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "无法进行数据库操作");
+                return -1;
+            }
         }
     }
 }

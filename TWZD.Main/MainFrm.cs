@@ -20,56 +20,41 @@ namespace TWZD.Main
 
     public partial class MainFrm : Form
     {
-        static FrameCallBack frameCallBack;
-        static QuitCallBack quitCallBack;
-
-        int testID;
-        bool quitFlag = false;
-
-        System.Timers.Timer winTimer;
-        System.Timers.Timer fadeTimer;
-        WinState frmState;
-        double frmOpacity = 0;
-        Stopwatch watch;
-        SQLiteMgr sqlMgr;
-        StrokeMgr strokeMgr;
-        string currentChar;
-        Random rand;
-        bool camUsable;
-        Icon appIcon;
-
         public MainFrm()
         {
-            this.InitializeComponent();
-            CVDllImport.CVInit();
+            InitializeComponent();
+
             Directory.SetCurrentDirectory(Application.StartupPath);
-            this.frmState = MainFrm.WinState.Halt;
-            this.sqlMgr = new SQLiteMgr(".", "twz", typeof(TWZDData));
-            this.watch = new Stopwatch();
-            this.rand = new Random();
-            this.ReadConfig();
-            Variable.MainFormNotify = new FormNotifier(this.DoNotify);
-            if (Environment.OSVersion.Version.Major <= 5)
-            {
-                this.appIcon = Resources.Yong16color;
-            }
-            else
-            {
-                this.appIcon = Resources.Yong16bw;
-            }
-            this.notifyIcon1.Icon = this.appIcon;
-            base.Opacity = 0.0;
-            this.strokeMgr = new StrokeMgr("", this.pictureBox1);
-            int initialStyle = CVDllImport.GetWindowLong(base.Handle, -20);
-            int WS_EX_TOOLWINDOW = 128;
-            int WS_EX_TRANSPARENT = 32;
-            CVDllImport.SetWindowLong(base.Handle, -20, initialStyle | 524288 | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW);
-            this.winTimer = new System.Timers.Timer((double)(Variable.AlertIntervalMin * 60 * 1000));
-            this.fadeTimer = new System.Timers.Timer(50.0);
-            this.winTimer.Elapsed += new ElapsedEventHandler(this.OnAlert);
-            this.fadeTimer.Elapsed += new ElapsedEventHandler(this.DoAllTask);
+
+            Variable.MainFormNotify = new FormNotifier(DoNotify);
+            sqlMgr = new SQLiteMgr(Environment.CurrentDirectory, "twz", typeof(TWZDData));
+            strokeMgr = new StrokeMgr("", pictureBox1);
+            watch = new Stopwatch();
+            rand = new Random();
+            winTimer = new System.Timers.Timer((double)(Variable.AlertIntervalMin * 60 * 1000));
+            fadeTimer = new System.Timers.Timer(50.0);
+            winTimer.Elapsed += new ElapsedEventHandler(OnAlert);
+            fadeTimer.Elapsed += new ElapsedEventHandler(DoAllTask);
+            winTimer.Enabled = true;
+
+            frmState = MainFrm.WinState.Halt;
+            appIcon = (Environment.OSVersion.Version.Major <= 5)
+                ? Resources.Yong16color
+                : Resources.Yong16bw;
+            Opacity = 0.0;
+            notifyIcon1.Icon = appIcon;
+
+            ReadConfig();
+            CVDllImport.CVInit();
+
+            //鼠标穿透
+            //int WS_EX_APPWINDOW = 0x00040000;
+            int STYLE = CVDllImport.GetWindowLong(Handle, -20);
+            int WS_EX_TOOLWINDOW = 0x00000080;
+            int WS_EX_TRANSPARENT = 0x00000020;
+            CVDllImport.SetWindowLong(Handle, -20,
+                STYLE | 0x80000 | (WS_EX_TRANSPARENT) | WS_EX_TOOLWINDOW);
             Control.CheckForIllegalCrossThreadCalls = false;
-            this.winTimer.Enabled = true;
         }
 
         private void ReadConfig()
@@ -89,7 +74,7 @@ namespace TWZD.Main
         {
             quitFlag = true;
 
-            if (this.frmState == WinState.Working)
+            if (frmState == WinState.Working)
             {
                 strokeMgr.Done = true;
             }
@@ -145,7 +130,7 @@ namespace TWZD.Main
 
         private void OnQuit(bool isCamError)
         {
-            this.strokeMgr.Done = true;
+            strokeMgr.Done = true;
         }
 
         private void PreAlert()
@@ -156,13 +141,13 @@ namespace TWZD.Main
             CVDllImport.CVSetFrameEvent(MainFrm.frameCallBack);
             CVDllImport.CVSetQuitEvent(MainFrm.quitCallBack);
 
-            testID = rand.Next(10000, 100000000) % 861;
+            testID = rand.Next(phraseCount << 4, phraseCount << 5) % phraseCount;
             //testID = 10;
 
             DataTable dtPhrase = sqlMgr.SelectFromTable("Phrase", "rowid", testID.ToString());
             label词语.Text = (string)dtPhrase.Rows[0]["词语"];
             label注音.Text = (string)dtPhrase.Rows[0]["注音"];
-            
+
             string temp = (string)dtPhrase.Rows[0]["释义"];
             if (temp.Length > 50)
             {
@@ -193,7 +178,7 @@ namespace TWZD.Main
 
             退出ToolStripMenuItem.Enabled = false;
             设置ToolStripMenuItem.Enabled = false;
-            预览ToolStripMenuItem.Text = "不写了";
+            预览ToolStripMenuItem.Text = "不寫了";
             fadeTimer.Enabled = true;
             watch.Reset();
             watch.Start();
@@ -201,7 +186,7 @@ namespace TWZD.Main
 
         private void CheckCam()
         {
-            this.camUsable = CVDllImport.CVTestCam(Variable.WebCamID);
+            camUsable = CVDllImport.CVTestCam(Variable.WebCamID);
         }
 
         private void DoNotify(object sender, object param)
@@ -342,13 +327,12 @@ namespace TWZD.Main
                         if (quitFlag)
                         {
                             Application.Exit();
-                            return;
                         }
                         else
                         {
                             退出ToolStripMenuItem.Enabled = true;
                             设置ToolStripMenuItem.Enabled = true;
-                            预览ToolStripMenuItem.Text = "写个字";
+                            预览ToolStripMenuItem.Text = "寫個字";
                             frmState = WinState.Halt;
                             frmOpacity = 0;
                             watch.Reset();
@@ -368,6 +352,25 @@ namespace TWZD.Main
             Variable.MainForm.Invoke(Variable.MainFormNotify,
                 new object[] { "setopacity", frmOpacity });
         }
+
+        static FrameCallBack frameCallBack;
+        static QuitCallBack quitCallBack;
+
+        int testID;
+        int phraseCount = 625;
+        bool quitFlag = false;
+
+        System.Timers.Timer winTimer;
+        System.Timers.Timer fadeTimer;
+        WinState frmState;
+        double frmOpacity = 0;
+        Stopwatch watch;
+        SQLiteMgr sqlMgr;
+        StrokeMgr strokeMgr;
+        string currentChar;
+        Random rand;
+        bool camUsable;
+        Icon appIcon;
 
         enum WinState
         {
