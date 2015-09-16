@@ -45,7 +45,7 @@ namespace TWZD.Data
             catch (Exception ex)
             {
                 _conn.Close();
-                MessageBox.Show(ex.Message, "初始化到数据库的连接失败");
+                throw new Exception("初始化到数据库的连接失败", ex);
             }
         }
 
@@ -57,8 +57,7 @@ namespace TWZD.Data
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "数据库关闭失败");
-                return;
+                throw new Exception("数据库关闭失败", ex);
             }
         }
 
@@ -98,7 +97,7 @@ namespace TWZD.Data
             }
             else
             {
-                MessageBox.Show("错误的数据库定义类型");
+                throw new Exception("错误的数据库定义类型");
             }
         }
 
@@ -128,8 +127,7 @@ namespace TWZD.Data
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "查询失败");
-                return ds;
+                throw new Exception("查询失败", ex);
             }
         }
 
@@ -157,8 +155,7 @@ namespace TWZD.Data
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, "无法进行数据库操作");
-                return -1;
+                throw new Exception("无法进行数据库操作", ex);
             }
         }
     }
