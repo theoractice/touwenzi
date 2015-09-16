@@ -23,7 +23,7 @@
   <ItemDefinitionGroup>
     <Link>
       <AdditionalDependencies>
-	      $(cv_lib)opencv_calib3d$(CV_VERSION)$(DebugSuffix).lib;
+        $(cv_lib)opencv_calib3d$(CV_VERSION)$(DebugSuffix).lib;
         $(cv_lib)opencv_contrib$(CV_VERSION)$(DebugSuffix).lib;
         $(cv_lib)opencv_core$(CV_VERSION)$(DebugSuffix).lib;
         $(cv_lib)opencv_features2d$(CV_VERSION)$(DebugSuffix).lib;
