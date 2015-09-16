@@ -1,28 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
-using System.Reflection;
 using System.Data;
 using System.Data.SQLite;
-using System.Windows.Forms;
+using System.IO;
+using System.Reflection;
 
 namespace TWZD.Data
 {
     public class SQLiteMgr
     {
-        string _dbFilePath, _dbFileName, _dbFileFullName, _dbName;
-
+        string _dbFileFullName, _dbName;
         SQLiteConnection _conn;
-        Type _dbDesc;
+        Type _dbInfo;
 
-        public SQLiteMgr(string filePath, string fileName, Type dbDescClass)
+        public SQLiteMgr(string filePath, string fileName, Type dbInfo)
         {
-            _dbFilePath = filePath;
-            _dbFileName = fileName;
-            _dbDesc = dbDescClass;
-            _dbName = _dbDesc.Name;
-            _dbFileFullName = _dbFilePath + "\\" + _dbFileName + ".db";
+            _dbInfo = dbInfo;
+            _dbName = _dbInfo.Name;
+            _dbFileFullName = string.Format("{0}/{1}.db", filePath, fileName);
 
             _conn = new SQLiteConnection();
 
@@ -82,7 +76,7 @@ namespace TWZD.Data
             Open();
             //_conn.ChangePassword("FB4201A0C89EA0C01B03F1FD52FA6625");
 
-            foreach (FieldInfo info in _dbDesc.GetFields())
+            foreach (FieldInfo info in _dbInfo.GetFields())
             {
                 CreateTable(info.FieldType);
             }
@@ -93,7 +87,7 @@ namespace TWZD.Data
             object loader = Activator.CreateInstance(type);
             if (loader is DbTableDesc)
             {
-                ExecuteSQL((loader as DbTableDesc).GetCreateCmd());
+                ExecuteSQL((loader as DbTableDesc).GetCreateCommand());
             }
             else
             {
@@ -105,7 +99,7 @@ namespace TWZD.Data
         {
             SQLiteCommand cmd = new SQLiteCommand(
                 string.Format("select * from {0} where {1} = @value",
-                table, 
+                table,
                 variable),
                 _conn);
 
@@ -134,7 +128,19 @@ namespace TWZD.Data
         public void AddToDB<T>(T item)
             where T : DbTableDesc
         {
-            ExecuteSQL((string)item.GetInsertCmd(0));
+            SQLiteDataAdapter adapter = new SQLiteDataAdapter(
+                string.Format("select * from {0} where 0 = 1", item.GetType().Name), _conn);
+            SQLiteCommandBuilder cmdGen = new SQLiteCommandBuilder(adapter);
+            SQLiteCommand cmd = cmdGen.GetInsertCommand(true);
+
+            foreach (FieldInfo info in item.GetType().GetFields())
+            {
+                cmd.Parameters.Add(new SQLiteParameter(
+                    string.Format("@{0}", info.Name),
+                    info.GetValue(item)));
+            }
+
+            ExecuteSQL(cmd);
         }
 
         public void ResetTable<T>(T type)
@@ -142,6 +148,18 @@ namespace TWZD.Data
         {
             ExecuteSQL("DROP TABLE " + type.Name);
             CreateTable(type);
+        }
+
+        private int ExecuteSQL(SQLiteCommand cmd)
+        {
+            try
+            {
+                return cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("无法进行数据库操作", ex);
+            }
         }
 
         private int ExecuteSQL(string cmdText)
@@ -155,7 +173,7 @@ namespace TWZD.Data
             }
             catch (Exception ex)
             {
-                throw new Exception("无法进行数据库操作", ex);
+                throw new Exception("无法进行数据库操作，请检查SQL命令格式", ex);
             }
         }
     }

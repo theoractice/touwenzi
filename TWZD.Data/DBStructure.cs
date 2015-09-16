@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-
-namespace TWZD.Data
+﻿namespace TWZD.Data
 {
     public interface DbTableDesc
     {
-        string GetCreateCmd();
-        string GetInsertCmd(Int64 id);
+        string GetCreateCommand();
     }
 
     public class TWZDData
@@ -24,33 +18,13 @@ namespace TWZD.Data
         public string 笔顺数据;
         public string 备注;
 
-        public string GetCreateCmd()
+        public string GetCreateCommand()
         {
             return "CREATE TABLE StrokeOrder("
                 + "汉字 TEXT NOT NULL, "
                 + "笔顺数据 TEXT NOT NULL, "
                 + "备注 TEXT NOT NULL"
                 + ")";
-        }
-
-        public string GetInsertCmd(Int64 id)
-        {
-            string str = "";
-
-            foreach (FieldInfo info in typeof(StrokeOrder).GetFields())
-            {
-                str += info.Name + ", ";
-            }
-
-            str = str.Remove(str.Length - 2);
-
-            str = "insert into StrokeOrder(" + str + ") values('"
-                + 汉字.ToString() + "','"
-                + 笔顺数据.ToString() + "','"
-                + 备注.ToString()
-                + "')";
-
-            return str;
         }
     }
 
@@ -61,7 +35,7 @@ namespace TWZD.Data
         public string 释义;
         public string 单字位置;
 
-        public string GetCreateCmd()
+        public string GetCreateCommand()
         {
             return "CREATE TABLE Phrase("
                 + "词语 TEXT NOT NULL, "
@@ -69,27 +43,6 @@ namespace TWZD.Data
                 + "释义 TEXT NOT NULL, "
                 + "单字位置 TEXT NOT NULL"
                 + ")";
-        }
-
-        public string GetInsertCmd(Int64 id)
-        {
-            string str = "";
-
-            foreach (FieldInfo info in typeof(Phrase).GetFields())
-            {
-                str += info.Name + ", ";
-            }
-
-            str = str.Remove(str.Length - 2);
-
-            str = "insert into Phrase(" + str + ") values('"
-                + 词语.ToString() + "','"
-                + 注音.ToString() + "','"
-                + 释义.ToString() + "','"
-                + 单字位置.ToString()
-                + "')";
-
-            return str;
         }
     }
 
@@ -104,7 +57,7 @@ namespace TWZD.Data
         public string 摄像机编号;
         public string 小窗显示;
 
-        public string GetCreateCmd()
+        public string GetCreateCommand()
         {
             return "CREATE TABLE UserConfig("
                 + "工作时间 TEXT NOT NULL, "
@@ -116,31 +69,6 @@ namespace TWZD.Data
                 + "摄像机编号 TEXT NOT NULL, "
                 + "小窗显示 TEXT NOT NULL"
                 + ")";
-        }
-
-        public string GetInsertCmd(Int64 id)
-        {
-            string str = "";
-
-            foreach (FieldInfo info in typeof(UserConfig).GetFields())
-            {
-                str += info.Name + ", ";
-            }
-
-            str = str.Remove(str.Length - 2);
-
-            str = "insert into UserConfig(" + str + ") values('"
-                + 工作时间.ToString() + "','"
-                + 休息时间.ToString() + "','"
-                + 显示时间.ToString() + "','"
-                + 提示透明度.ToString() + "','"
-                + 文字透明度.ToString() + "','"
-                + 体感灵敏度.ToString() + "','"
-                + 摄像机编号.ToString() + "','"
-                + 小窗显示.ToString()
-                + "')";
-
-            return str;
         }
     }
 }
