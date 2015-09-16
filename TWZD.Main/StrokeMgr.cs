@@ -106,32 +106,33 @@ namespace TWZD.Main
             }
 
 
-            if (curStrokeProgress > 0.7)
-                goto pp;
+            if (curStrokeProgress <= 0.7)
+            {
+                //if ((Math.Abs(x) + Math.Abs(y) < 0.1f))
+                //    return;
 
-            //if ((Math.Abs(x) + Math.Abs(y) < 0.1f))
-            //    return;
+                if (Math.Abs(AngleBetween(
+                    new PointF(x, y),
+                    new PointF(d2.pts[3].X - d1.pts[3].X, d2.pts[3].Y - d1.pts[3].Y)))
+                    > (0.6 + 0.4 * curStrokeProgress))
+                {
+                    bContinue = true;
+                    return;
+                }
 
-            if (Math.Abs(AngleBetween(
-                new PointF(x, y),
-                new PointF(d2.pts[3].X - d1.pts[3].X, d2.pts[3].Y - d1.pts[3].Y)))
-                > (0.6 + 0.4 * curStrokeProgress))
+                if (0 == (curStroke & curStrokePart & (int)curStrokeProgress))
+                {
+                    if (!bContinue)
+                        return;
+                }
+            }
+            else
             {
                 bContinue = true;
-                return;
+                speed += interval * (0.05f / 0.111f);
+                if (speed > 0.1f)
+                    speed = 0.1f;
             }
-
-            if (0 == (curStroke & curStrokePart & (int)curStrokeProgress))
-            {
-                if (!bContinue)
-                    return;
-            }
-
-        pp:
-            bContinue = true;
-            speed += interval * (0.05f / 0.111f);
-            if (speed > 0.1f)
-                speed = 0.1f;
         }
 
         internal void OnDraw()

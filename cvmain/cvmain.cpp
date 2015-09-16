@@ -221,7 +221,7 @@ tracking(Mat& rawframe, Mat& output)
 	if (rawPoints[0].empty())
 	{
 		update = false;
-		goto pp;
+		goto updateNow;
 	}
 
 	if (prevgray.empty())
@@ -252,7 +252,7 @@ tracking(Mat& rawframe, Mat& output)
 	if (abs(movementVec.x) + abs(movementVec.y) < (k << 1))
 	{
 		update = false;
-		goto pp;
+		goto updateNow;
 	}
 
 	basePoints.resize(k);
@@ -262,7 +262,7 @@ tracking(Mat& rawframe, Mat& output)
 	if (k < 15)
 	{
 		update = false;
-		goto pp;
+		goto updateNow;
 	}
 
 	for (size_t i = 0; i < rawPoints[1].size(); i++)
@@ -278,7 +278,7 @@ tracking(Mat& rawframe, Mat& output)
 
 	movementVec *= 1.0 / k;
 
-pp:
+updateNow:
 	if (isTracking)
 	{
 		OnData(0 - movementVec.x, movementVec.y, interval, frame.data, update);
