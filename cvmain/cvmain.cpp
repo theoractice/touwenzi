@@ -61,6 +61,8 @@ CVSetQuitEvent(QUIT_CALLBACK callback)
 DLL_EXPORT bool
 CVInit()
 {
+	// 打开 cap 会初始化相关 COM 组件，之后便可以调用 OpenCV 中隐藏的 
+	// videoInput 库函数。只适用于 Windows
 	try
 	{
 		VideoCapture cap(0);
@@ -201,7 +203,7 @@ tracking(Mat& rawframe, Mat& output)
 	cvtColor(frame, gray, CV_BGR2GRAY);
 	equalizeHist(gray, gray);
 
-	// 筛选特征点
+	// 简单的光流法检测运动
 	if (rawPoints[0].size() <= 30)
 	{
 		FAST(gray, featurePoints, 31, false);
@@ -218,6 +220,7 @@ tracking(Mat& rawframe, Mat& output)
 		basePoints.insert(basePoints.end(), fastFeatures.begin(), fastFeatures.end());
 	}
 
+	// 没有合适的候选点，不更新汉字动画
 	if (rawPoints[0].empty())
 	{
 		update = false;
@@ -249,6 +252,7 @@ tracking(Mat& rawframe, Mat& output)
 
 	//cout << k << endl;
 
+	// 有运动但幅度不够，不更新汉字动画
 	if (abs(movementVec.x) + abs(movementVec.y) < (k << 1))
 	{
 		update = false;
@@ -259,6 +263,7 @@ tracking(Mat& rawframe, Mat& output)
 	rawPoints[0].resize(k);
 	rawPoints[1].resize(k);
 
+	// 候选点个数太少，不更新汉字动画
 	if (k < 15)
 	{
 		update = false;
@@ -315,6 +320,7 @@ angleBetween(const Point2f& v1, const Point2f& v2)
 float
 getInterval()
 {
+	// 用 TickMeter 也可以
 	clock_t tmp = nowClk;
 	nowClk = clock();
 	return (float)(nowClk - tmp) / CLOCKS_PER_SEC;
