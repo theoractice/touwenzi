@@ -91,7 +91,7 @@ namespace TWZD.Data
             }
             else
             {
-                throw new Exception("错误的数据库定义类型");
+                throw new Exception("数据表定义错误，无法创建");
             }
         }
 
