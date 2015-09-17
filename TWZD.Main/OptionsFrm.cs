@@ -61,8 +61,7 @@ namespace TWZD.Main
 
                 for (int i = 0; i < count; i++)
                 {
-                    string name = CVDllImport.CVGetCamName(i);
-                    comboBox1.Items.Add(name);
+                    comboBox1.Items.Add(CVDllImport.CVGetCamName(i));
                 }
                 comboBox1.SelectedIndex = 0; //make dafault to first cam
             }

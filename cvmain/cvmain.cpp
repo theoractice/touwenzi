@@ -241,7 +241,10 @@ tracking(Mat& rawframe, Mat& output)
 		{
 			if (status[i])
 			{
-				if (angleBetween(pointsTracked[i] - pointsToTrack[i], pointsToTrack[i] - pointsAsKey[i]) < 0.2)
+				if (angleBetween(
+					pointsTracked[i] - pointsToTrack[i], 
+					pointsToTrack[i] - pointsAsKey[i]) 
+					< 0.2)
 				{
 					// 移动方向不变，则有效位移越来越长
 					motionDesc[pointsAsKey[i]] = pointsTracked[i];
