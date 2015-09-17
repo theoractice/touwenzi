@@ -20,7 +20,7 @@ namespace TWZD.Main
         internal static extern void CVSetQuitEvent(QuitCallBack callback);
 
         [DllImport("cvmain.dll")]
-        [return: MarshalAs(UnmanagedType.I1)]
+        //[return: MarshalAs(UnmanagedType.I1)]
         internal static extern bool CVInit();
 
         [DllImport("cvmain.dll")]
@@ -39,7 +39,7 @@ namespace TWZD.Main
         internal static extern string CVGetCamName(int id);
 
         [DllImport("cvmain.dll")]
-        [return: MarshalAs(UnmanagedType.I1)]
+        //[return: MarshalAs(UnmanagedType.I1)]
         internal static extern bool CVTestCam(int id);
     }
 }

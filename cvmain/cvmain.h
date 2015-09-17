@@ -15,18 +15,18 @@ extern "C"
 {
 #endif
 
-	typedef void(CALLBACK* FRAME_CALLBACK)(float x, float y, float interval, void* pImage, bool update);
-	typedef void(CALLBACK* QUIT_CALLBACK)(bool isCamError);
+	typedef void(CALLBACK* FRAME_CALLBACK)(float x, float y, float interval, void* pImage, BOOL update);
+	typedef void(CALLBACK* QUIT_CALLBACK)(BOOL isCamError);
 
 	DLL_EXPORT void		CVSetFrameEvent(FRAME_CALLBACK callback);
 	DLL_EXPORT void		CVSetQuitEvent(QUIT_CALLBACK callback);
-	DLL_EXPORT bool		CVInit();
+	DLL_EXPORT BOOL		CVInit();
 	DLL_EXPORT void		CVStart(char* FILE);
 	DLL_EXPORT void		CVQuit();
 	DLL_EXPORT void		CVWaitForQuit();
 	DLL_EXPORT int		CVGetCamCount();
 	DLL_EXPORT char*	CVGetCamName(int id);
-	DLL_EXPORT bool		CVTestCam(int id);
+	DLL_EXPORT BOOL		CVTestCam(int id);
 
 #ifdef __cplusplus
 }

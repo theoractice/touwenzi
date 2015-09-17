@@ -31,9 +31,9 @@ namespace TWZD.Main
             watch = new Stopwatch();
             rand = new Random();
             winTimer = new System.Timers.Timer((double)(Variable.AlertIntervalMin * 60 * 1000));
-            fadeTimer = new System.Timers.Timer(50.0);
+            taskTimer = new System.Timers.Timer(50.0);
             winTimer.Elapsed += new ElapsedEventHandler(OnAlert);
-            fadeTimer.Elapsed += new ElapsedEventHandler(DoAllTask);
+            taskTimer.Elapsed += new ElapsedEventHandler(DoAllTask);
             winTimer.Enabled = true;
 
             frmState = MainFrm.WinState.Halt;
@@ -177,7 +177,7 @@ namespace TWZD.Main
             退出ToolStripMenuItem.Enabled = false;
             设置ToolStripMenuItem.Enabled = false;
             预览ToolStripMenuItem.Text = "不寫了";
-            fadeTimer.Enabled = true;
+            taskTimer.Enabled = true;
             watch.Reset();
             watch.Start();
         }
@@ -277,7 +277,7 @@ namespace TWZD.Main
 
                             if (camUsable)
                             {
-                                fadeTimer.Interval = 15;
+                                taskTimer.Interval = 15;
 
                                 ThreadPool.QueueUserWorkItem(delegate
                                 {
@@ -295,7 +295,7 @@ namespace TWZD.Main
                         {
                             CVDllImport.CVQuit();
                             frmState = WinState.PhraseOut;
-                            fadeTimer.Interval = 50;
+                            taskTimer.Interval = 50;
 
                             watch.Reset();
                             watch.Start();
@@ -336,7 +336,7 @@ namespace TWZD.Main
                     {
                         watch.Reset();
                         watch.Stop();
-                        fadeTimer.Enabled = false;
+                        taskTimer.Enabled = false;
                     }));
                     break;
                 default:
@@ -357,7 +357,7 @@ namespace TWZD.Main
         bool quitFlag = false;
 
         System.Timers.Timer winTimer;
-        System.Timers.Timer fadeTimer;
+        System.Timers.Timer taskTimer;
         WinState frmState;
         double frmOpacity = 0;
         Stopwatch watch;

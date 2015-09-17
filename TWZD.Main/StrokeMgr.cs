@@ -128,7 +128,6 @@ namespace TWZD.Main
 
         internal void OnDraw()
         {
-            speed = speed * 0.8f;
             Variable.MainForm.Invoke(new MethodInvoker(Draw));
         }
 
@@ -144,6 +143,9 @@ namespace TWZD.Main
         /// </summary>
         internal void Draw()
         {
+            // 越画越慢
+            speed = speed * 0.8f;
+
             BezierPoints origPts = strokeBeziers[curStroke][curStrokePart];
 
             float lenFactor = 400f / (float)Math.Sqrt(Math.Pow((origPts.pts[0].X - origPts.pts[3].X), 2)

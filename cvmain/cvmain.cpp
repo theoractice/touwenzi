@@ -20,8 +20,7 @@
 using namespace std;
 using namespace cv;
 
-void tracking(Mat& frame, Mat& output);
-bool isGoodPoint(int i);
+void tracking(Mat& rawFrame, Mat& prevGray);
 float angleBetween(const Point2f& v1, const Point2f& v2);
 float getInterval();
 
@@ -30,9 +29,8 @@ QUIT_CALLBACK OnQuit = NULL;
 
 clock_t nowClk;
 
-Mat gray, prevgray;
-Mat rawframe, frame;
-Mat result;
+// 窗体显示所需图像，直接全局声明
+Mat frame;
 
 bool isTracking = false;
 bool Quitted = true;
@@ -49,7 +47,7 @@ CVSetQuitEvent(QUIT_CALLBACK callback)
 	OnQuit = callback;
 }
 
-DLL_EXPORT bool
+DLL_EXPORT BOOL
 CVInit()
 {
 	// 打开 cap 会初始化相关 COM 组件，之后便可以调用 OpenCV 中隐藏的 
@@ -70,6 +68,7 @@ DLL_EXPORT void
 CVStart(char* stream)
 {
 	VideoCapture cap;
+	Mat rawFrame, gray, prevGray;
 	isTracking = true;
 	Quitted = false;
 
@@ -92,23 +91,20 @@ CVStart(char* stream)
 
 	do
 	{
-		cap >> rawframe; // 有些摄像头第一帧会empty
-	} while (rawframe.empty());
+		cap >> rawFrame; // 有些摄像头第一帧会empty
+	} while (rawFrame.empty());
 
 	while (isTracking)
 	{
-		tracking(rawframe, result);
-		cap >> rawframe;
+		tracking(rawFrame, prevGray);
+		cap >> rawFrame;
 
-		if (rawframe.empty())
+		if (rawFrame.empty())
 		{
 			break;
 		}
 	}
 
-	gray.release();
-	prevgray.release();
-	cap.release();
 	OnQuit(false);
 	Quitted = true;
 }
@@ -149,9 +145,10 @@ CVGetCamName(int id)
 	return videoInput::getDeviceName(id);
 }
 
-DLL_EXPORT bool
+DLL_EXPORT BOOL
 CVTestCam(int id)
 {
+	Mat rawFrame;
 	VideoCapture cap;
 	bool ret = false;
 
@@ -161,18 +158,15 @@ CVTestCam(int id)
 	try
 	{
 		cap.open(id);
-		cap >> rawframe; // 有些摄像头第一帧会empty
-		cap >> rawframe;
+		cap >> rawFrame; // 有些摄像头第一帧会empty
+		cap >> rawFrame;
 	}
 	catch (...)
 	{
 		return false;
 	}
 
-	ret = !(rawframe.empty());
-
-	cap.release();
-
+	ret = !(rawFrame.empty());
 	return ret;
 }
 
@@ -188,19 +182,20 @@ public:
 map<Point2f, Point2f, HashCompare> motionDesc;
 
 void
-tracking(Mat& rawframe, Mat& output)
+tracking(Mat& rawFrame, Mat& prevGray)
 {
+	Mat gray;
 	bool update = false;
 	Point2f movementVec(0, 0);
 	float interval = getInterval();
 
-	resize(rawframe, frame, Size(WIDTH, HEIGHT));
+	resize(rawFrame, frame, Size(WIDTH, HEIGHT));
 	cvtColor(frame, gray, CV_BGR2GRAY);
 	equalizeHist(gray, gray);
 
-	if (prevgray.empty())
+	if (prevGray.empty())
 	{
-		gray.copyTo(prevgray);
+		gray.copyTo(prevGray);
 	}
 
 	// 简单的光流法检测运动
@@ -235,7 +230,7 @@ tracking(Mat& rawframe, Mat& output)
 		vector<uchar> status;
 		vector<float> err;
 
-		calcOpticalFlowPyrLK(prevgray, gray, pointsToTrack, pointsTracked, status, err);
+		calcOpticalFlowPyrLK(prevGray, gray, pointsToTrack, pointsTracked, status, err);
 
 		for (size_t i = 0; i < motionDesc.size(); i++)
 		{
@@ -269,20 +264,19 @@ tracking(Mat& rawframe, Mat& output)
 		movementVec *= 1.0 / motionDesc.size();
 	}
 
-	cout << sqrt(movementVec.x * movementVec.x + movementVec.y * movementVec.y) << endl;
-
 	if ((motionDesc.size() > 15)
-		&& (sqrt(movementVec.x * movementVec.x + movementVec.y * movementVec.y) > 0.5))
+		&& (sqrt(movementVec.x * movementVec.x + movementVec.y * movementVec.y) > 1.0f))
 	{
 		update = true;
 	}
 
 	if (isTracking)
 	{
+		//cout << sqrt(movementVec.x * movementVec.x + movementVec.y * movementVec.y) << endl;
 		OnData(0 - movementVec.x, movementVec.y, interval, frame.data, update);
 	}
 
-	swap(prevgray, gray);
+	swap(prevGray, gray);
 }
 
 float
