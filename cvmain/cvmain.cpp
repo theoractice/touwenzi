@@ -199,7 +199,7 @@ tracking(Mat& rawFrame, Mat& prevGray)
 	}
 
 	// 简单的光流法检测运动
-	if (motionDesc.size() < 30)
+	if (motionDesc.size() < 50)
 	{
 		vector<KeyPoint> newFeatures;
 
