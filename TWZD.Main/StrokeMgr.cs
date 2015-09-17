@@ -12,8 +12,7 @@ namespace TWZD.Main
 {
     internal class BezierPoints
     {
-        public PointF[] pts = new PointF[5];
-        public float part = 0;
+        public PointF[] pts = new PointF[4];
     }
 
     internal class StrokeMgr
@@ -89,20 +88,17 @@ namespace TWZD.Main
                 return;
             }
 
+            //计算当前笔画点的斜率
             BezierPoints d1, d2;
             if (1 == curStrokeProgress)
             {
-                d1 = LerpBezierCurve(
-            strokeBeziers[curStroke][curStrokePart], 0.99f);
-                d2 = LerpBezierCurve(
-            strokeBeziers[curStroke][curStrokePart], 1.00f);
+                d1 = LerpBezierCurve(strokeBeziers[curStroke][curStrokePart], 0.99f);
+                d2 = LerpBezierCurve(strokeBeziers[curStroke][curStrokePart], 1.00f);
             }
             else
             {
-                d1 = LerpBezierCurve(
-            strokeBeziers[curStroke][curStrokePart], curStrokeProgress);
-                d2 = LerpBezierCurve(
-            strokeBeziers[curStroke][curStrokePart], curStrokeProgress + 0.01f);
+                d1 = LerpBezierCurve(strokeBeziers[curStroke][curStrokePart], curStrokeProgress);
+                d2 = LerpBezierCurve(strokeBeziers[curStroke][curStrokePart], curStrokeProgress + 0.01f);
             }
 
 
@@ -126,13 +122,11 @@ namespace TWZD.Main
                         return;
                 }
             }
-            else
-            {
-                bContinue = true;
-                speed += interval * (0.05f / 0.111f);
-                if (speed > 0.1f)
-                    speed = 0.1f;
-            }
+
+            bContinue = true;
+            speed += interval * (0.05f / 0.111f);
+            if (speed > 0.1f)
+                speed = 0.1f;
         }
 
         internal void OnDraw()
@@ -285,8 +279,6 @@ namespace TWZD.Main
             ret.pts[2].Y = yc;
             ret.pts[3].Y = yd;
 
-            ret.pts[4] = bezier.pts[4];
-
             return ret;
         }
 
@@ -326,7 +318,6 @@ namespace TWZD.Main
             //line.pts[1].Y = line.pts[0].Y * 0.67f + line.pts[3].Y * 0.33f;
             //line.pts[2].X = line.pts[0].X * 0.33f + line.pts[3].X * 0.67f;
             //line.pts[2].Y = line.pts[0].Y * 0.33f + line.pts[3].Y * 0.67f;
-            line.pts[4] = new PointF(1f, 1f);
 
             return line;
         }
@@ -348,7 +339,6 @@ namespace TWZD.Main
                 base0.X,
                 base0.Y * 0.7f + pie.pts[3].Y * 0.3f);
 
-            pie.pts[4] = new PointF(1f, 1f);
             return pie;
         }
 
@@ -403,7 +393,6 @@ namespace TWZD.Main
 
             beziers[0].pts[2] = beziers[0].pts[1];
 
-            beziers[0].pts[4] = new PointF(1f, 1f);
             return beziers;
         }
 
@@ -436,7 +425,6 @@ namespace TWZD.Main
             beziers[0].pts[2] = beziers[0].pts[1];
             beziers[0].pts[3] = beziers[0].pts[1];
 
-            beziers[0].pts[4] = new PointF(1f, 1f);
             return beziers;
         }
 
@@ -472,7 +460,6 @@ namespace TWZD.Main
             //    beziers[1].pts[0].X * 0.7f + beziers[1].pts[3].X * 0.3f,
             //    beziers[1].pts[0].Y * 0.3f + beziers[1].pts[3].Y * 0.7f);
 
-            //beziers[1].pts[4] = new PointF(1f, 1f);
             //return beziers;
         }
 
@@ -511,14 +498,12 @@ namespace TWZD.Main
             LinearLerp(beziers[0].pts[0], beziers[0].pts[3],
                 ref beziers[0].pts[1], ref beziers[0].pts[2]);
 
-            beziers[0].pts[4] = new PointF(1f, 1f);
 
             beziers[1].pts[0] = beziers[0].pts[3];
             beziers[1].pts[3] = SplitKeyPoints(keyPointList, 3);
             LinearLerp(beziers[1].pts[0], beziers[1].pts[3],
                 ref beziers[1].pts[1], ref beziers[1].pts[2]);
 
-            beziers[1].pts[4] = new PointF(1f, 1f);
             return beziers;
         }
 
@@ -553,13 +538,11 @@ namespace TWZD.Main
             beziers[1].pts[1].X = beziers[1].pts[0].X;
             beziers[1].pts[2] = beziers[1].pts[1];
             beziers[1].pts[3] = beziers[1].pts[1];
-            beziers[1].pts[4] = new PointF(1f, 1f);
 
             beziers[2].pts[0] = beziers[1].pts[1];
             beziers[2].pts[3] = SplitKeyPoints(keyPointList, 4);
             beziers[2].pts[1] = beziers[2].pts[3];
             beziers[2].pts[2] = beziers[2].pts[3];
-            beziers[2].pts[4] = new PointF(1f, 1f);
 
             return beziers;
         }
@@ -642,7 +625,6 @@ namespace TWZD.Main
             beziers[0].pts[2] = SplitKeyPoints(keyPointList, 2);
             beziers[0].pts[2].X += (beziers[0].pts[2].X - beziers[0].pts[0].X) * 0.2f;
             beziers[0].pts[3] = SplitKeyPoints(keyPointList, 3);
-            beziers[0].pts[4] = new PointF(1f, 1f);
 
             beziers[1] = bezierLine(keyPointList, 3, 4);
             return beziers;
@@ -670,13 +652,11 @@ namespace TWZD.Main
             beziers[2].pts[1].X = beziers[2].pts[0].X;
             beziers[2].pts[2] = beziers[2].pts[1];
             beziers[2].pts[3] = beziers[2].pts[1];
-            beziers[2].pts[4] = new PointF(1f, 1f);
 
             beziers[3].pts[0] = beziers[2].pts[1];
             beziers[3].pts[3] = SplitKeyPoints(keyPointList, 5);
             beziers[3].pts[1] = beziers[3].pts[3];
             beziers[3].pts[2] = beziers[3].pts[3];
-            beziers[3].pts[4] = new PointF(1f, 1f);
 
             return beziers;
         }
@@ -697,7 +677,6 @@ namespace TWZD.Main
             beziers[1].pts[1].Y = beziers[1].pts[1].Y - (beziers[1].pts[1].Y - beziers[1].pts[0].Y) * 0.2f;
             beziers[1].pts[2].X = beziers[1].pts[1].X - (beziers[1].pts[0].X - beziers[1].pts[1].X) * 0.3f;
             beziers[1].pts[2].Y = beziers[1].pts[3].Y;
-            beziers[1].pts[4] = new PointF(1f, 1f);
 
             beziers[2] = bezierLine(keyPointList, 3, 4);
             beziers[3] = bezierLine(keyPointList, 4, 5);
@@ -737,7 +716,6 @@ namespace TWZD.Main
             beziers[2].pts[2] = SplitKeyPoints(keyPointList, 3);
             beziers[2].pts[2].X += (beziers[2].pts[2].X - beziers[2].pts[0].X) * 0.2f;
             beziers[2].pts[3] = SplitKeyPoints(keyPointList, 4);
-            beziers[2].pts[4] = new PointF(1f, 1f);
 
             beziers[3] = bezierLine(keyPointList, 4, 5);
             return beziers;
@@ -766,13 +744,11 @@ namespace TWZD.Main
             beziers[3].pts[1].X = beziers[3].pts[0].X;
             beziers[3].pts[2] = beziers[3].pts[1];
             beziers[3].pts[3] = beziers[3].pts[1];
-            beziers[3].pts[4] = new PointF(1f, 1f);
 
             beziers[4].pts[0] = beziers[3].pts[1];
             beziers[4].pts[3] = SplitKeyPoints(keyPointList, 6);
             beziers[4].pts[1] = beziers[4].pts[3];
             beziers[4].pts[2] = beziers[4].pts[3];
-            beziers[4].pts[4] = new PointF(1f, 1f);
 
             return beziers;
         }

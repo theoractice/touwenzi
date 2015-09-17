@@ -153,16 +153,13 @@ CVWaitForQuit()
 DLL_EXPORT int 
 CVGetCamCount()
 {
-	videoInput VI;
-	VI.setVerbose(true);
-	return VI.listDevices();
+	return videoInput::listDevices();
 }
 
 DLL_EXPORT char*
 CVGetCamName(int id)
 {
-	videoInput VI;
-	return VI.getDeviceName(id);
+	return videoInput::getDeviceName(id);
 }
 
 DLL_EXPORT bool
