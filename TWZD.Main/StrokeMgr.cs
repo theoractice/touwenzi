@@ -104,9 +104,6 @@ namespace TWZD.Main
 
             if (curStrokeProgress <= 0.7)
             {
-                //if ((Math.Abs(x) + Math.Abs(y) < 0.1f))
-                //    return;
-
                 if (Math.Abs(AngleBetween(
                     new PointF(x, y),
                     new PointF(d2.pts[3].X - d1.pts[3].X, d2.pts[3].Y - d1.pts[3].Y)))

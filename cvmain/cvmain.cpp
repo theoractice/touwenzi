@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <map>
 #include <time.h>
 
 #include <opencv2/video/video.hpp>
@@ -27,21 +28,11 @@ float getInterval();
 FRAME_CALLBACK OnData = NULL;
 QUIT_CALLBACK OnQuit = NULL;
 
-int maxCount = 300;
-double qLevel = 0.01;
-double minDist = 5.0;
 clock_t nowClk;
 
 Mat gray, prevgray;
 Mat rawframe, frame;
 Mat result;
-
-vector<Point2f> rawPoints[2];
-vector<Point2f> basePoints;
-vector<Point2f> fastFeatures;
-vector<KeyPoint> featurePoints;
-vector<uchar> status;		
-vector<float> err;
 
 bool isTracking = false;
 bool Quitted = true;
@@ -115,10 +106,6 @@ CVStart(char* stream)
 		}
 	}
 
-	basePoints.clear();
-	fastFeatures.clear();
-	rawPoints[0].clear();
-	rawPoints[1].clear();
 	gray.release();
 	prevgray.release();
 	cap.release();
@@ -126,7 +113,7 @@ CVStart(char* stream)
 	Quitted = true;
 }
 
-DLL_EXPORT void 
+DLL_EXPORT void
 CVQuit()
 {
 	if (isTracking == false)
@@ -141,7 +128,7 @@ CVQuit()
 	}
 }
 
-DLL_EXPORT void 
+DLL_EXPORT void
 CVWaitForQuit()
 {
 	while (!Quitted)
@@ -150,7 +137,7 @@ CVWaitForQuit()
 	}
 }
 
-DLL_EXPORT int 
+DLL_EXPORT int
 CVGetCamCount()
 {
 	return videoInput::listDevices();
@@ -189,10 +176,21 @@ CVTestCam(int id)
 	return ret;
 }
 
+struct HashCompare
+{
+public:
+	bool operator()(const Point2f& lhs, const Point2f& rhs)
+	{
+		return lhs.y * WIDTH + lhs.x < rhs.y * WIDTH + rhs.x;
+	}
+};
+
+map<Point2f, Point2f, HashCompare> motionDesc;
+
 void
 tracking(Mat& rawframe, Mat& output)
 {
-	bool update = true;
+	bool update = false;
 	Point2f movementVec(0, 0);
 	float interval = getInterval();
 
@@ -200,100 +198,88 @@ tracking(Mat& rawframe, Mat& output)
 	cvtColor(frame, gray, CV_BGR2GRAY);
 	equalizeHist(gray, gray);
 
-	// 简单的光流法检测运动
-	if (rawPoints[0].size() <= 30)
-	{
-		FAST(gray, featurePoints, 31, false);
-		size_t num = (featurePoints.size() < 50) ? featurePoints.size() : 50;
-		fastFeatures.clear();
-
-		for (size_t i = 0; i < num; i++)
-		{
-			int idx = i * featurePoints.size() / num;
-			fastFeatures.push_back(featurePoints[idx].pt);
-		}
-
-		rawPoints[0].insert(rawPoints[0].end(), fastFeatures.begin(), fastFeatures.end());
-		basePoints.insert(basePoints.end(), fastFeatures.begin(), fastFeatures.end());
-	}
-
-	// 没有合适的候选点，不更新汉字动画
-	if (rawPoints[0].empty())
-	{
-		update = false;
-		goto updateNow;
-	}
-
 	if (prevgray.empty())
 	{
 		gray.copyTo(prevgray);
 	}
 
-	calcOpticalFlowPyrLK(prevgray, gray, rawPoints[0], rawPoints[1], status, err);
-
-	int k = 0;
-
-	basePoints.resize(rawPoints[1].size());
-
-	for (size_t i = 0; i < rawPoints[1].size(); i++)
+	// 简单的光流法检测运动
+	if (motionDesc.size() < 30)
 	{
-		if (isGoodPoint(i))
+		vector<KeyPoint> newFeatures;
+
+		FAST(gray, newFeatures, 31, false);
+		size_t nNewFeatures = (newFeatures.size() < 50) ? newFeatures.size() : 50;
+
+		for (size_t i = 0; i < nNewFeatures; i++)
 		{
-			movementVec += rawPoints[1][i] - basePoints[i];
-			basePoints[k] = basePoints[i];
-			rawPoints[0][k] = rawPoints[0][i];
-			rawPoints[1][k] = rawPoints[1][i];
-			k++;
+			size_t idx = i * newFeatures.size() / nNewFeatures;
+			motionDesc[newFeatures[idx].pt] = newFeatures[idx].pt;
 		}
 	}
 
-	//cout << k << endl;
+	vector<Point2f> pointsAsKey, pointsToTrack, pointsTracked;
 
-	// 有运动但幅度不够，不更新汉字动画
-	if (abs(movementVec.x) + abs(movementVec.y) < (k << 1))
+	for (map<Point2f, Point2f>::iterator it = motionDesc.begin(); it != motionDesc.end(); ++it)
 	{
-		update = false;
-		goto updateNow;
+		pointsAsKey.push_back(it->first);
 	}
 
-	basePoints.resize(k);
-	rawPoints[0].resize(k);
-	rawPoints[1].resize(k);
-
-	// 候选点个数太少，不更新汉字动画
-	if (k < 15)
+	for (map<Point2f, Point2f>::iterator it = motionDesc.begin(); it != motionDesc.end(); ++it)
 	{
-		update = false;
-		goto updateNow;
+		pointsToTrack.push_back(it->second);
 	}
 
-	for (size_t i = 0; i < rawPoints[1].size(); i++)
+	if (motionDesc.size() > 0)
 	{
-		if (angleBetween(rawPoints[1][i] - rawPoints[0][i], rawPoints[1][i] - basePoints[i]) > 0.2)
-			basePoints[i] = rawPoints[1][i];
+		vector<uchar> status;
+		vector<float> err;
 
-		movementVec += rawPoints[1][i] - basePoints[i];
+		calcOpticalFlowPyrLK(prevgray, gray, pointsToTrack, pointsTracked, status, err);
+
+		for (size_t i = 0; i < motionDesc.size(); i++)
+		{
+			if (status[i])
+			{
+				if (angleBetween(pointsTracked[i] - pointsToTrack[i], pointsToTrack[i] - pointsAsKey[i]) < 0.2)
+				{
+					// 移动方向不变，则有效位移越来越长
+					motionDesc[pointsAsKey[i]] = pointsTracked[i];
+					movementVec.x += pointsTracked[i].x - pointsAsKey[i].x;
+					movementVec.y += pointsTracked[i].y - pointsAsKey[i].y;
+					//line(frame, pointsAsKey[i], pointsTracked[i], Scalar(0, 0, 255));
+					//circle(frame, pointsTracked[i], 2, Scalar(255, 0, 0), -1);
+				}
+				else
+				{
+					// 移动方向改变，则更新参考点
+					motionDesc.erase(pointsAsKey[i]);
+					motionDesc[pointsToTrack[i]] = pointsTracked[i];
+				}
+			}
+			else
+			{
+				motionDesc.erase(pointsAsKey[i]);
+			}
+		}
+
+		movementVec *= 1.0 / motionDesc.size();
 	}
 
-	if (rawPoints[1].size() > 0)
-		movementVec *= 1.0 / rawPoints[1].size();
+	cout << sqrt(movementVec.x * movementVec.x + movementVec.y * movementVec.y) << endl;
 
-	movementVec *= 1.0 / k;
+	if ((motionDesc.size() > 15)
+		&& (sqrt(movementVec.x * movementVec.x + movementVec.y * movementVec.y) > 0.5))
+	{
+		update = true;
+	}
 
-updateNow:
 	if (isTracking)
 	{
 		OnData(0 - movementVec.x, movementVec.y, interval, frame.data, update);
 	}
 
-	swap(rawPoints[1], rawPoints[0]);
 	swap(prevgray, gray);
-}
-
-bool
-isGoodPoint(const int i)
-{
-	return status[i] && ((abs(rawPoints[0][i].x - rawPoints[1][i].x) + abs(rawPoints[0][i].y - rawPoints[1][i].y)) > 2);
 }
 
 float
