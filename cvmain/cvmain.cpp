@@ -1,14 +1,14 @@
-#include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <iostream>
 #include <map>
 #include <time.h>
 
-#include <opencv2/video/video.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/video/video.hpp>
 
 #include "cvmain.h"
 #include "videoInput.h"
@@ -24,8 +24,8 @@ void tracking(Mat& rawFrame, Mat& prevGray);
 float angleBetween(const Point2f& v1, const Point2f& v2);
 float getInterval();
 
-FRAME_CALLBACK OnData = NULL;
-QUIT_CALLBACK OnQuit = NULL;
+FRAME_CALLBACK	OnData = NULL;
+QUIT_CALLBACK	OnQuit = NULL;
 
 clock_t nowClk;
 
@@ -33,8 +33,7 @@ clock_t nowClk;
 Mat frame;
 
 bool isTracking = false;
-
-HANDLE quitted = CreateEvent(NULL, TRUE, FALSE, L"quitted");
+HANDLE quitted = CreateEvent(NULL, FALSE, FALSE, L"quitted");
 
 DLL_EXPORT void
 CVSetFrameEvent(FRAME_CALLBACK callback)
