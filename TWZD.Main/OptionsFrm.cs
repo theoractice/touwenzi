@@ -81,7 +81,6 @@ namespace TWZD.Main
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             CVDllImport.CVQuit();
-            CVDllImport.CVWaitForQuit();
             string id = comboBox1.SelectedIndex.ToString();
             ThreadPool.QueueUserWorkItem(delegate
             {

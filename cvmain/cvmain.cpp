@@ -33,7 +33,8 @@ clock_t nowClk;
 Mat frame;
 
 bool isTracking = false;
-bool Quitted = true;
+
+HANDLE quitted = CreateEvent(NULL, TRUE, FALSE, L"quitted");
 
 DLL_EXPORT void
 CVSetFrameEvent(FRAME_CALLBACK callback)
@@ -70,7 +71,6 @@ CVStart(char* stream)
 	VideoCapture cap;
 	Mat rawFrame, gray, prevGray;
 	isTracking = true;
-	Quitted = false;
 
 	int ret = 0;
 
@@ -101,35 +101,21 @@ CVStart(char* stream)
 
 		if (rawFrame.empty())
 		{
-			break;
+			isTracking = false;
 		}
 	}
 
 	OnQuit(false);
-	Quitted = true;
+	SetEvent(quitted);
 }
 
 DLL_EXPORT void
 CVQuit()
 {
-	if (isTracking == false)
+	if (isTracking)
 	{
-		Quitted = true;
 		isTracking = false;
-	}
-	else
-	{
-		Quitted = false;
-		isTracking = false;
-	}
-}
-
-DLL_EXPORT void
-CVWaitForQuit()
-{
-	while (!Quitted)
-	{
-		Sleep(10);
+		WaitForSingleObject(quitted, INFINITE);
 	}
 }
 

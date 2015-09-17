@@ -30,9 +30,6 @@ namespace TWZD.Main
         internal static extern void CVQuit();
 
         [DllImport("cvmain.dll")]
-        internal static extern void CVWaitForQuit();
-
-        [DllImport("cvmain.dll")]
         internal static extern int CVGetCamCount();
 
         [DllImport("cvmain.dll")]
