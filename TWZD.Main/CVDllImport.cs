@@ -8,10 +8,10 @@ namespace TWZD.Main
     internal static class CVDllImport
     {
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        internal static extern long GetWindowLong(IntPtr hWnd, int nIndex);
 
         [DllImport("user32.dll")]
-        internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+        internal static extern long SetWindowLong(IntPtr hWnd, int nIndex, long dwNewLong);
 
         [DllImport("cvmain.dll")]
         internal static extern void CVSetFrameEvent(FrameCallBack callback);

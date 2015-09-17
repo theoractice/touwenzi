@@ -38,24 +38,24 @@ namespace TWZD.Main
 
             frmState = MainFrm.WinState.Halt;
             appIcon = (Environment.OSVersion.Version.Major <= 5)
-                ? Resources.Yong16color
-                : Resources.Yong16bw;
+                ? Resources.彩色
+                : Resources.黑白;
             Opacity = 0.0;
             notifyIcon1.Icon = appIcon;
 
-            ReadConfig();
+            GetConfig();
             CVDllImport.CVInit();
 
             //鼠标穿透
             //int WS_EX_APPWINDOW = 0x00040000;
-            int STYLE = CVDllImport.GetWindowLong(Handle, -20);
-            int WS_EX_TOOLWINDOW = 0x00000080;
-            int WS_EX_TRANSPARENT = 0x00000020;
+            long STYLE = CVDllImport.GetWindowLong(Handle, -20);
+            long WS_EX_TOOLWINDOW = 0x00000080;
+            long WS_EX_TRANSPARENT = 0x00000020;
             CVDllImport.SetWindowLong(Handle, -20,
                 STYLE | 0x80000 | (WS_EX_TRANSPARENT) | WS_EX_TOOLWINDOW);
         }
 
-        private void ReadConfig()
+        private void GetConfig()
         {
             DataTable dtCfg = sqlMgr.SelectFromTable("UserConfig", "rowid", "1");
             Variable.AlertIntervalMin = int.Parse((string)dtCfg.Rows[0]["工作时间"]);
@@ -66,6 +66,21 @@ namespace TWZD.Main
             Variable.Sensitivity = int.Parse((string)dtCfg.Rows[0]["体感灵敏度"]);
             Variable.WebCamID = int.Parse((string)dtCfg.Rows[0]["摄像机编号"]);
             Variable.DisplayCam = bool.Parse((string)dtCfg.Rows[0]["小窗显示"]);
+        }
+
+        private void SetConfig()
+        {
+            UserConfig cfg = new UserConfig();
+            cfg.工作时间 = Variable.AlertIntervalMin.ToString();
+            cfg.休息时间 = Variable.ShowIntervalMin.ToString();
+            cfg.显示时间 = Variable.FadeIntervalSec.ToString();
+            cfg.提示透明度 = Variable.AlertOpacity.ToString();
+            cfg.文字透明度 = Variable.PhraseOpacity.ToString();
+            cfg.体感灵敏度 = Variable.Sensitivity.ToString();
+            cfg.摄像机编号 = Variable.WebCamID.ToString();
+            cfg.小窗显示 = Variable.DisplayCam.ToString();
+            sqlMgr.ResetTable(typeof(UserConfig));
+            sqlMgr.AddToDB(cfg);
         }
 
         private void 退出ToolStripMenuItem_Click(object sender, EventArgs e)
@@ -89,17 +104,7 @@ namespace TWZD.Main
             optFrm.ShowDialog();
             if (optFrm.DialogResult == DialogResult.OK)
             {
-                UserConfig cfg = new UserConfig();
-                cfg.工作时间 = Variable.AlertIntervalMin.ToString();
-                cfg.休息时间 = Variable.ShowIntervalMin.ToString();
-                cfg.显示时间 = Variable.FadeIntervalSec.ToString();
-                cfg.提示透明度 = Variable.AlertOpacity.ToString();
-                cfg.文字透明度 = Variable.PhraseOpacity.ToString();
-                cfg.体感灵敏度 = Variable.Sensitivity.ToString();
-                cfg.摄像机编号 = Variable.WebCamID.ToString();
-                cfg.小窗显示 = Variable.DisplayCam.ToString();
-                sqlMgr.ResetTable(typeof(UserConfig));
-                sqlMgr.AddToDB(cfg);
+                SetConfig();
 
                 winTimer.Stop();
                 winTimer.Interval = Variable.AlertIntervalMin * 60 * 1000;
