@@ -82,19 +82,6 @@ namespace TWZD.Data
             }
         }
 
-        private void CreateTable(Type type)
-        {
-            object loader = Activator.CreateInstance(type);
-            if (loader is DbTableDesc)
-            {
-                ExecuteSQL((loader as DbTableDesc).GetCreateCommand());
-            }
-            else
-            {
-                throw new Exception("数据表定义错误，无法创建");
-            }
-        }
-
         public DataTable SelectFromTable(string table, string variable, string value)
         {
             SQLiteCommand cmd = new SQLiteCommand(
@@ -159,6 +146,19 @@ namespace TWZD.Data
             catch (Exception ex)
             {
                 throw new Exception("无法进行数据库操作", ex);
+            }
+        }
+
+        private void CreateTable(Type type)
+        {
+            object loader = Activator.CreateInstance(type);
+            try
+            {
+                ExecuteSQL((loader as DbTableDesc).GetCreateCommand());
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("数据表定义错误，无法创建", ex);
             }
         }
 
