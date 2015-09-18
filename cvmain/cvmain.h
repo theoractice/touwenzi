@@ -1,8 +1,7 @@
 #ifndef __CVMAIN_H__
 #define __CVMAIN_H__
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include "windows.h"
 
 #ifdef CVMAIN_EXPORTS
 #define DLL_EXPORT __declspec(dllexport)

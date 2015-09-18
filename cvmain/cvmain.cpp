@@ -51,19 +51,9 @@ CVSetQuitEvent(QUIT_CALLBACK callback)
 DLL_EXPORT BOOL
 CVInit()
 {
-	// 打开 cap 会初始化 COM 组件，之后便可调用 OpenCV 隐藏的 
-	// videoInput 库来获取摄像头的完整信息，支持多个摄像头。
+	// 初始化 COM 组件后便可调用 OpenCV 隐藏的 videoInput 库来获取摄像头的完整信息，支持多个摄像头。
 	// 此方法适用于 Windows，其他系统原理类似。
-	try
-	{
-		VideoCapture cap(0);
-	}
-	catch (...)
-	{
-		return false;
-	}
-
-	return true;
+	return SUCCEEDED(CoInitialize(NULL));
 }
 
 DLL_EXPORT void
