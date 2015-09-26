@@ -22,7 +22,7 @@ extern "C"
 	DLL_EXPORT BOOL			CVInit();
 	DLL_EXPORT void			CVStart(char* FILE);
 	DLL_EXPORT void			CVQuit();
-	DLL_EXPORT int		CVGetCamCount();
+	DLL_EXPORT int			CVGetCamCount();
 	DLL_EXPORT char*		CVGetCamName(int id);
 	DLL_EXPORT BOOL			CVTestCam(int id);
 

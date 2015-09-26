@@ -126,7 +126,7 @@ CVGetCamName(int id)
 DLL_EXPORT BOOL
 CVTestCam(int id)
 {
-	// 测试摄像头有无被占用或能否正常工作
+	// 测试能否正常调用摄像头
 	Mat rawFrame;
 	VideoCapture cap;
 	bool ret = false;
